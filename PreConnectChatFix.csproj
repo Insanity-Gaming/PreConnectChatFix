@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>PreConnectChatFix</AssemblyName>
+    <RootNamespace>PreConnectChatFix</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ModSharp.Sharp.Shared"
+                      Version="*"
+                      PrivateAssets="all" />
+  </ItemGroup>
+
+</Project>
