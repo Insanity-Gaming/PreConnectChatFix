@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Sharp.Shared;
 using Sharp.Shared.Enums;
 using Sharp.Shared.Listeners;
@@ -10,6 +11,7 @@ namespace PreConnectChatFix;
 public sealed class PreConnectChatFix : IModSharpModule, IClientListener
 {
     private readonly IClientManager _clients;
+    private readonly ILogger<PreConnectChatFix> _logger;
 
     public PreConnectChatFix(
         ISharedSystem sharedSystem,
@@ -20,19 +22,20 @@ public sealed class PreConnectChatFix : IModSharpModule, IClientListener
         bool hotReload)
     {
         _clients = sharedSystem.GetClientManager();
+        _logger = sharedSystem.GetLoggerFactory().CreateLogger<PreConnectChatFix>();
     }
 
     public bool Init()
     {
         _clients.InstallClientListener(this);
-        Console.WriteLine("[PreConnectChatFix] Loaded.");
+        _logger.LogInformation("PreConnectChatFix loaded");
         return true;
     }
 
     public void Shutdown()
     {
         _clients.RemoveClientListener(this);
-        Console.WriteLine("[PreConnectChatFix] Unloaded.");
+        _logger.LogInformation("PreConnectChatFix unloaded");
     }
 
     public ECommandAction OnClientSayCommand(
@@ -45,7 +48,27 @@ public sealed class PreConnectChatFix : IModSharpModule, IClientListener
         if (client.IsInGame)
             return ECommandAction.Skipped;
 
-        Console.WriteLine($"[PreConnectChatFix] Blocked pre-connect chat from slot {client.Slot}.");
+        if (!client.IsValid)
+        {
+            _logger.LogWarning("Blocked chat from an invalid or not-yet-connected client");
+            return ECommandAction.Stopped;
+        }
+
+        if (!client.IsAuthenticated)
+        {
+            _logger.LogWarning(
+                "Blocked pre-connect chat from {Name} in slot {Slot}; SteamID is not authenticated",
+                client.Name,
+                client.Slot);
+            return ECommandAction.Stopped;
+        }
+
+        _logger.LogWarning(
+            "Blocked pre-connect chat from {Name} ({SteamId}) in slot {Slot}",
+            client.Name,
+            client.SteamId,
+            client.Slot);
+
         return ECommandAction.Stopped;
     }
 
